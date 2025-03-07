@@ -12,18 +12,21 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            background: #f0f0f0;
         }
         #pdf-container {
             width: 100%;
             height: 100vh;
-            overflow: auto;
-            background: #f0f0f0;
+            overflow-y: auto;
             text-align: center;
+            padding: 10px;
         }
         canvas {
             display: block;
-            margin: auto;
+            margin: 10px auto;
             background: white;
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
@@ -36,7 +39,6 @@
         const url = 'Thesis_Robin_Hefner_206488.pdf'; // Pfad zur PDF-Datei
         const pdfContainer = document.getElementById('pdf-container');
 
-        // PDF.js initialisieren
         const loadingTask = pdfjsLib.getDocument(url);
         loadingTask.promise.then(pdf => {
             pdfContainer.innerHTML = ''; // Lade-Text entfernen
@@ -47,16 +49,15 @@
 
         function renderPage(pdf, pageNum) {
             pdf.getPage(pageNum).then(page => {
-                const scale = 1.5; // Zoom-Faktor
+                const scale = window.innerWidth < 768 ? 1.0 : 1.5; // Dynamische Skalierung
                 const viewport = page.getViewport({ scale });
 
-                // Canvas für die Seite erstellen
                 const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
                 pdfContainer.appendChild(canvas);
 
-                const ctx = canvas.getContext('2d');
                 const renderContext = { canvasContext: ctx, viewport };
                 page.render(renderContext);
             });
