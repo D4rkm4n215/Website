@@ -16,12 +16,9 @@
         #pdf-container, iframe {
             width: 100%;
             height: 100vh;
-            overflow: auto;
         }
-        #pdf-container {
-            background: #f0f0f0;
-            text-align: center;
-            display: none;
+        iframe {
+            border: none;
         }
         canvas {
             display: block;
@@ -31,42 +28,39 @@
     </style>
 </head>
 <body>
-    <iframe id="pdfViewer" src="Thesis_Robin_Hefner_206488.pdf"></iframe>
-    <div id="pdf-container">
+    <div id="pdf-container" style="display: none;">
         <p>Lade PDF...</p>
     </div>
+    <iframe id="pdfViewer" src="Thesis_Robin_Hefner_206488.pdf"></iframe>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-            if (isSafari) {
-                document.getElementById("pdfViewer").style.display = "none";
-                document.getElementById("pdf-container").style.display = "block";
-                loadPDF();
-            }
-        });
-
-        function loadPDF() {
-            const url = 'Thesis_Robin_Hefner_206488.pdf';
+        const url = 'Thesis_Robin_Hefner_206488.pdf';
+        var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        
+        if (isSafari) {
+            document.getElementById("pdfViewer").style.display = "none";
+            document.getElementById("pdf-container").style.display = "block";
+            
             const pdfContainer = document.getElementById('pdf-container');
             const loadingTask = pdfjsLib.getDocument(url);
-            
             loadingTask.promise.then(pdf => {
-                pdfContainer.innerHTML = ''; // Lade-Text entfernen
+                pdfContainer.innerHTML = '';
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     renderPage(pdf, pageNum);
                 }
             });
         }
-
+        
         function renderPage(pdf, pageNum) {
             pdf.getPage(pageNum).then(page => {
                 const scale = 1.5;
                 const viewport = page.getViewport({ scale });
+                
                 const canvas = document.createElement('canvas');
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
                 document.getElementById('pdf-container').appendChild(canvas);
+                
                 const ctx = canvas.getContext('2d');
                 const renderContext = { canvasContext: ctx, viewport };
                 page.render(renderContext);
