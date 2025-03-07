@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thesis PDF Viewer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/web/pdf_viewer.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/web/pdf_viewer.min.js"></script>
     <style>
         html, body {
             margin: 0;
@@ -13,52 +15,99 @@
             height: 100%;
             overflow: hidden;
         }
-        #pdf-container {
+        #viewerContainer {
             width: 100%;
             height: 100vh;
             overflow: auto;
             background: #f0f0f0;
-            text-align: center;
         }
-        canvas {
-            display: block;
-            margin: auto;
+        #toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #333;
+            color: white;
+            padding: 10px;
+        }
+        button {
             background: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div id="pdf-container">
-        <p>Lade PDF...</p>
+
+    <!-- Toolbar -->
+    <div id="toolbar">
+        <button onclick="prevPage()">⬅ Seite zurück</button>
+        <span id="pageInfo">Seite <span id="pageNum">1</span> von <span id="pageCount">?</span></span>
+        <button onclick="nextPage()">Seite weiter ➡</button>
+        <button onclick="downloadPDF()">📥 Download</button>
+        <button onclick="printPDF()">🖨 Drucken</button>
+    </div>
+
+    <!-- PDF Viewer -->
+    <div id="viewerContainer">
+        <canvas id="pdfCanvas"></canvas>
     </div>
 
     <script>
-        const url = 'Thesis_Robin_Hefner_206488.pdf';
-        const pdfContainer = document.getElementById('pdf-container');
+        const url = 'Thesis_Robin_Hefner_206488.pdf'; // Pfad zur PDF-Datei
+        let pdfDoc = null,
+            pageNum = 1,
+            pageIsRendering = false,
+            canvas = document.getElementById("pdfCanvas"),
+            ctx = canvas.getContext("2d");
 
-        const loadingTask = pdfjsLib.getDocument(url);
-        loadingTask.promise.then(pdf => {
-            pdfContainer.innerHTML = '';
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                renderPage(pdf, pageNum);
-            }
-        });
-
-        function renderPage(pdf, pageNum) {
-            pdf.getPage(pageNum).then(page => {
-                const scale = 1.5; 
-                const viewport = page.getViewport({ scale });
-
-                const canvas = document.createElement('canvas');
-                canvas.width = viewport.width;
+        function renderPage(num) {
+            pageIsRendering = true;
+            pdfDoc.getPage(num).then(page => {
+                let viewport = page.getViewport({ scale: 1.5 });
                 canvas.height = viewport.height;
-                pdfContainer.appendChild(canvas);
-
-                const ctx = canvas.getContext('2d');
-                const renderContext = { canvasContext: ctx, viewport };
-                page.render(renderContext);
+                canvas.width = viewport.width;
+                let renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+                page.render(renderContext).promise.then(() => {
+                    pageIsRendering = false;
+                    document.getElementById("pageNum").textContent = num;
+                });
             });
         }
+
+        function prevPage() {
+            if (pageNum <= 1) return;
+            pageNum--;
+            renderPage(pageNum);
+        }
+
+        function nextPage() {
+            if (pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            renderPage(pageNum);
+        }
+
+        function downloadPDF() {
+            window.open(url, "_blank");
+        }
+
+        function printPDF() {
+            let iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            iframe.contentWindow.print();
+        }
+
+        pdfjsLib.getDocument(url).promise.then(pdf => {
+            pdfDoc = pdf;
+            document.getElementById("pageCount").textContent = pdf.numPages;
+            renderPage(pageNum);
+        });
     </script>
+
 </body>
 </html>
