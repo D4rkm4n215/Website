@@ -28,43 +28,24 @@
             max-width: 100%;
             height: auto;
         }
-        iframe {
-            width: 100%;
-            height: 100vh;
-            border: none;
-        }
     </style>
 </head>
 <body>
-    <div id="iframe-container">
-        <iframe id="pdf-iframe" src="Thesis_Robin_Hefner_206488.pdf"></iframe>
-    </div>
-    <div id="pdf-container" style="display: none;">
+    <div id="pdf-container">
         <p>Lade PDF...</p>
     </div>
 
     <script>
-        const pdfUrl = 'Thesis_Robin_Hefner_206488.pdf';
-        const iframe = document.getElementById('pdf-iframe');
+        const url = 'Thesis_Robin_Hefner_206488.pdf'; // Pfad zur PDF-Datei
         const pdfContainer = document.getElementById('pdf-container');
-        const iframeContainer = document.getElementById('iframe-container');
 
-        iframe.onerror = function() {
-            console.warn('iFrame konnte nicht geladen werden. Wechsle zum Fallback-Viewer.');
-            iframeContainer.style.display = 'none';
-            pdfContainer.style.display = 'block';
-            loadPdfJsViewer();
-        };
-
-        function loadPdfJsViewer() {
-            const loadingTask = pdfjsLib.getDocument(pdfUrl);
-            loadingTask.promise.then(pdf => {
-                pdfContainer.innerHTML = ''; // Lade-Text entfernen
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    renderPage(pdf, pageNum);
-                }
-            });
-        }
+        const loadingTask = pdfjsLib.getDocument(url);
+        loadingTask.promise.then(pdf => {
+            pdfContainer.innerHTML = ''; // Lade-Text entfernen
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                renderPage(pdf, pageNum);
+            }
+        });
 
         function renderPage(pdf, pageNum) {
             pdf.getPage(pageNum).then(page => {
